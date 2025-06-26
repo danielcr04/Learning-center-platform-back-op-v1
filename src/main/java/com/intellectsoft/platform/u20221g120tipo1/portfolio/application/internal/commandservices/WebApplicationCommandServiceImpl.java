@@ -1,5 +1,8 @@
 package com.intellectsoft.platform.u20221g120tipo1.portfolio.application.internal.commandservices;
 
+import com.intellectsoft.platform.u20221g120tipo1.portfolio.domain.exceptions.DuplicateBackendUrlException;
+import com.intellectsoft.platform.u20221g120tipo1.portfolio.domain.exceptions.DuplicateFrontendUrlException;
+import com.intellectsoft.platform.u20221g120tipo1.portfolio.domain.exceptions.InvalidLaunchDateException;
 import com.intellectsoft.platform.u20221g120tipo1.portfolio.domain.model.aggregates.WebApplication;
 import com.intellectsoft.platform.u20221g120tipo1.portfolio.domain.model.commands.CreateWebApplicationCommand;
 import com.intellectsoft.platform.u20221g120tipo1.portfolio.domain.services.WebApplicationCommandService;
@@ -22,13 +25,7 @@ public class WebApplicationCommandServiceImpl implements WebApplicationCommandSe
 
     @Override
     public Optional<WebApplication> handle(CreateWebApplicationCommand command) {
-        // 1. Validar availabilityPercentage (regla de negocio específica)
-        if (command.availabilityPercentage() == null) {
-            throw new IllegalArgumentException("Availability percentage cannot be null");
-        }
-        if (command.availabilityPercentage() < 85 || command.availabilityPercentage() > 99) {
-            throw new IllegalArgumentException("Availability percentage must be between 85 and 99");
-        }
+
 
         // 2. Validar launchDate (regla de negocio específica de Intellectsoft)
         if (command.launchDate() == null || command.launchDate().trim().isEmpty()) {
@@ -49,23 +46,18 @@ public class WebApplicationCommandServiceImpl implements WebApplicationCommandSe
                 throw new IllegalArgumentException("Launch date cannot be in the future");
             }
         } catch (ParseException e) {
-            throw new IllegalArgumentException("Invalid date format. Expected yyyy-MM-dd", e);
-        }
-
-        // 3. Validar ClientId (regla de negocio)
-        if (command.clientId() == null || command.clientId() <= 0) {
-            throw new IllegalArgumentException("Client ID must be greater than zero");
+            throw new InvalidLaunchDateException(command.launchDate());
         }
 
         // 4. Validar URLs únicas (regla de negocio que requiere repositorio)
         var frontendUrl = new WebAddress(command.frontendUrl());
         if(webApplicationRepository.existsByFrontendUrl(frontendUrl)) {
-            throw new IllegalArgumentException("Web application with Frontend URL already exists: " + command.frontendUrl());
+             throw new DuplicateFrontendUrlException(command.frontendUrl());
         }
 
         var backendUrl = new WebAddress(command.backendUrl());
         if(webApplicationRepository.existsByBackendUrl(backendUrl)) {
-            throw new IllegalArgumentException("Web application with Backend URL already exists: " + command.backendUrl());
+            throw new DuplicateBackendUrlException(command.backendUrl());
         }
 
         var webApplication = new WebApplication(command);

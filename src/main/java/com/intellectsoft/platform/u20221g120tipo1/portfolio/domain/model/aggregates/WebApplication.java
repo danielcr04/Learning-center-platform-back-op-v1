@@ -101,7 +101,6 @@ public class WebApplication extends AuditableAbstractAggregateRoot<WebApplicatio
         validateUrls();
         validateDescription();
         validateAvailabilityPercentage();
-        validateLaunchDate();
     }
 
 
@@ -157,27 +156,6 @@ public class WebApplication extends AuditableAbstractAggregateRoot<WebApplicatio
         }
         if (availabilityPercentage < 85 || availabilityPercentage > 99) {
             throw new IllegalArgumentException("Availability percentage must be between 85 and 99");
-        }
-    }
-
-    /**
-     * Validates the launch date
-     */
-    private void validateLaunchDate() {
-        if (launchDate == null) {
-            throw new IllegalArgumentException("Launch date cannot be null");
-        }
-
-        // Intellectsoft founding date: July 15, 2007
-        Date intellectsoftFoundingDate = new Date(2007 - 1900, 6, 15); // Month is 0-based
-        if (launchDate.before(intellectsoftFoundingDate)) {
-            throw new IllegalArgumentException("Launch date cannot be before Intellectsoft founding date (July 15, 2007)");
-        }
-
-        // Cannot be in the future
-        Date now = new Date();
-        if (launchDate.after(now)) {
-            throw new IllegalArgumentException("Launch date cannot be in the future");
         }
     }
 
